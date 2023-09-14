@@ -1,13 +1,15 @@
 {
-    "name": "enterprise-php-dist/dal",
-    "description": "Data abstraction layer based on Mezzio, Doctrine and Swoole.",
+    "name": "enterprise-php-dist/pm",
+    "description": "Policies manager based on Mezzio, RDKafka and Swoole.",
     "type": "project",
     "license": "Unlicensed",
+    "minimum-stability": "rc",
     "keywords": [
-        "command-pattern",
+        "policies",
+        "laminas",
         "mezzio",
-        "doctrine",
-        "openswoole"
+        "rdkafka",
+        "swoole"
     ],
     "config": {
         "sort-packages": true,
@@ -30,52 +32,46 @@
         }
     },
     "require": {
-        "php": "~8.1.19",
-        "composer/package-versions-deprecated": "^1.10.99",
-        "laminas/laminas-component-installer": "^2.6",
-        "laminas/laminas-config-aggregator": "^1.6",
-        "laminas/laminas-diactoros": "^2.7",
-        "laminas/laminas-stdlib": "^3.6",
-        "mezzio/mezzio": "^3.7",
-        "mezzio/mezzio-helpers": "^5.7",
-        "laminas/laminas-servicemanager": "^3.4",
-        "laminas/laminas-paginator": "^2.13",
-        "laminas/laminas-hydrator": "^4.5",
-        "mezzio/mezzio-fastroute": "^3.0.3",
-        "mezzio/mezzio-swoole": "^4.5",
-        "mezzio/mezzio-problem-details": "^1.7",
-        "mezzio/mezzio-hal": "^2.4",
-        "monolog/monolog": "^3.2",
-        "lcobucci/clock": "^2.2",
-        "cuyz/valinor": "^0.14.0",
-        "azjezz/psl": "^2.0.3",
-        "opsway/doctrine-orm-swoole": "^1.2",
-        "symfony/cache": "^6.1"
+        "php": "^8.2",
+        "composer/package-versions-deprecated": "^1.11.99",
+        "laminas/laminas-component-installer": "^3.3",
+        "laminas/laminas-config-aggregator": "^1.13",
+        "laminas/laminas-diactoros": "^3.2",
+        "laminas/laminas-stdlib": "^3.17",
+        "mezzio/mezzio": "^3.17",
+        "mezzio/mezzio-helpers": "^5.15",
+        "laminas/laminas-servicemanager": "^4.0",
+        "mezzio/mezzio-fastroute": "^3.10",
+        "mezzio/mezzio-swoole": "^4.8",
+        "mezzio/mezzio-problem-details": "^1.12",
+        "monolog/monolog": "^3.4",
+        "lcobucci/clock": "^3.1",
+        "cuyz/valinor": "^1.6",
+        "azjezz/psl": "^2.7",
+        "openswoole/core": "^22.1",
+        "longlang/phpkafka": "^1.2"
     },
     "require-dev": {
-        "laminas/laminas-development-mode": "^3.3.0",
-        "mezzio/mezzio-tooling": "^2.1",
+        "laminas/laminas-development-mode": "^3.11",
         "roave/security-advisories": "dev-master",
-        "filp/whoops": "^2.7.1",
-        "doctrine/coding-standard": "^10.0.0",
-        "doctrine/migrations": "^3.5",
-        "php-standard-library/psalm-plugin": "^2.0",
-        "phpunit/phpunit": "^9.5.21",
-        "psalm/plugin-phpunit": "^0.17.0",
-        "qossmic/deptrac-shim": "^0.24.0",
-        "roave/infection-static-analysis-plugin": "^1.21",
-        "symfony/console": "^6.1",
-        "vimeo/psalm": "^4.24.0",
+        "filp/whoops": "^2.15",
+        "php-standard-library/psalm-plugin": "^2.2",
+        "phpunit/phpunit": "^10.3",
+        "psalm/plugin-phpunit": "^0.18",
+        "qossmic/deptrac-shim": "^1.0",
+        "roave/infection-static-analysis-plugin": "^1.32",
+        "symfony/console": "^6.3",
+        "vimeo/psalm": "^5.15",
         "openswoole/ide-helper": "@dev"
     },
     "autoload": {
         "psr-4": {
-            "DAL\\": "src/DAL/src/"
+            "PM\\": "src/PM/src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "DALTest\\": "test/DALTest/"
+            "PMTest\\": "test/PMTest/"
         }
     },
     "scripts": {
