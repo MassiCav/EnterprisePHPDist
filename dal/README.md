@@ -1,3 +1,5 @@
 # Data Abstraction Layer
 
-Receives commands (with a payload) and writes the data in the various databases according to the payload type.
+Abstraction layer for data persistency based on domain entities and ORM/ODM (using Doctrine).
+Only writing operations supported in this server.
+Operations managed via a POST with a payload (data and metadata) indicating the command to be executed.
