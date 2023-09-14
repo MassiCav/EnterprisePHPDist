@@ -1,0 +1,226 @@
+version: "3.7"
+
+services:
+
+  # Back Tier
+  dal:
+    container_name: dal
+    build:
+      context: ./dal
+      dockerfile: Dockerfile
+      target: x86-64 # or arm64, according to the CPU platform of your host
+      args:
+        TIMEZONE: "Europe/London"
+        SYSTEM_PACKAGES: "git unzip"
+        POST_BUILD_BASH: "/usr/local/sbin/post-build.sh"
+        ZEND_EXTENSIONS_LIST: "bcmath curl dom intl mysql redis zip odbc"
+        SWOOLE_VERSION: "22.0.0"
+    ports:
+      - "9501:9501"
+    env_file:
+      - ./dal/.env
+    volumes:
+      - ./dal/application:/dal
+      - ./dal/.docker/entrypoint.d:/entrypoint.d
+    networks:
+      - back-tier
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail http://localhost:9501/ping || exit 1
+      interval: 10s
+      timeout: 2s
+      retries: 2
+      start_period: 5s
+  
+  pm:
+    container_name: pm
+    build:
+      context: ./pm
+      dockerfile: Dockerfile
+      target: x86-64 # or arm64, according to the CPU platform of your host
+      args:
+        TIMEZONE: "Europe/London"
+        SYSTEM_PACKAGES: "git unzip"
+        POST_BUILD_BASH: "/usr/local/sbin/post-build.sh"
+        ZEND_EXTENSIONS_LIST: "bcmath curl dom intl mysql redis zip odbc"
+        SWOOLE_VERSION: "22.0.0"
+    ports:
+      - "9501:9501"
+    env_file:
+      - ./pm/.env
+    volumes:
+      - ./pm/application:/dal
+      - ./pm/.docker/entrypoint.d:/entrypoint.d
+    networks:
+      - back-tier
+    depends_on:
+      dal:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail http://localhost:9501/ping || exit 1
+      interval: 10s
+      timeout: 2s
+      retries: 2
+      start_period: 5s
+    
+  redis:
+    container_name: redis
+    image: 'bitnami/redis:7.2.1'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - TZ=Europe/London
+    volumes:
+      - ./redis/.docker/healthcheck.sh:/usr/local/bin/redis-healthcheck
+      - "redis_data:/bitnami/redis/data"
+    ports:
+      - "6379:6379"
+    networks:
+      - back-tier
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/redis-healthcheck"]
+      interval: 10s
+      timeout: 2s
+      retries: 2
+      start_period: 10s
+
+  db:
+    container_name: db
+    image: 'bitnami/mysql:8.1.0'
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "zend"
+      MYSQL_DATABASE: "ephp"
+      MYSQL_USER: "enterprisephp"
+      MYSQL_PASSWORD: "enterprisephp"
+      MYSQL_AUTHENTICATION_PLUGIN: "mysql_native_password"
+    ports:
+      - '3306:3306'
+    volumes:
+      - "mysql_data:/bitnami/mysql/data"
+    networks:
+      - back-tier
+    healthcheck:
+      test: "/usr/bin/mysql --user=root --password=root --execute \"SHOW DATABASES;\""
+      interval: 10s
+      timeout: 1s
+      retries: 5
+      start_period: 20s
+    logging:
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  replicator:
+    container_name: eventstore-replicator
+    image: 'eventstore/replicator:latest'
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./replicator/.docker/replicator.yml:/app/config/appsettings.yaml
+      - ./replicator/.docker/route.js:/app/config/route.js
+      - "replicator_data:/data"
+    environment:
+      REPLICATOR_DEBUG: 1
+    depends_on:
+      kafka:
+        condition: service_healthy
+      eventstore:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  kafka:
+    container_name: kafka
+    image: docker.io/bitnami/kafka:3.5
+    ports:
+      - "9092:9092"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    healthcheck:
+      test: "kafka-topics.sh --bootstrap-server kafka:9092 --topic hc --create --if-not-exists && kafka-topics.sh --bootstrap-server kafka:9092 --topic hc --describe"
+      interval: 10s
+      timeout: 1s
+      retries: 5
+      start_period: 20s
+    logging:
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Front and Back Tier 
+  # Decoupling Layer
+  eventstore:
+      container_name: eventstore
+      image: 'eventstore/eventstore:latest'
+      restart: always
+      environment:
+        - EVENTSTORE_CLUSTER_SIZE=1
+        - EVENTSTORE_RUN_PROJECTIONS=All
+        - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+        - EVENTSTORE_EXT_TCP_PORT=1113
+        - EVENTSTORE_HTTP_PORT=2113
+        - EVENTSTORE_INSECURE=true
+        - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+      ports:
+        - "2113:2113"
+      networks:
+        - back-tier
+        - front-tier
+      volumes:
+        - type: volume
+          source: eventstore-volume-data
+          target: /var/lib/eventstore-data
+        - type: volume
+          source: eventstore-volume-index
+          target: /var/lib/eventstore-index
+        - type: volume
+          source: eventstore-volume-logs
+          target: /var/log/eventstore
+      logging:
+        options:
+          max-size: "50m"
+          max-file: "5"
+# Networks
+networks:
+  front-tier:
+    driver: bridge
+  back-tier:
+    driver: bridge
+    
+# Volumes
+volumes:
+  replicator_data:
+    driver: local
+  redis_data:
+    driver: local
+  mysql_data:
+    driver: local
+  kafka_data:
+    driver: local
+  eventstore-volume-data:
+    driver: local
+  eventstore-volume-index:
+    driver: local
+  eventstore-volume-logs:
+    driver: local
+
+      

@@ -1,0 +1,8 @@
+laminas-ci.json
+.laminas-ci
+.gitignore
+.k8s
+README.md
+application/composer.lock
+application/vendor
+Dockerfile

@@ -1,0 +1,106 @@
+{
+    "name": "enterprise-php-dist/dal",
+    "description": "Data abstraction layer based on mezzio skeleton.",
+    "type": "project",
+    "license": "Unlicensed",
+    "keywords": [
+        "command-pattern",
+        "laminas",
+        "mezzio",
+        "doctrine",
+        "middleware",
+        "psr",
+        "psr-7",
+        "psr-11",
+        "psr-15"
+    ],
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "composer/package-versions-deprecated": true,
+            "laminas/laminas-component-installer": true,
+            "infection/extension-installer": true
+        }
+    },
+    "extra": {
+        "laminas": {
+            "component-whitelist": [
+                "mezzio/mezzio",
+                "mezzio/mezzio-helpers",
+                "mezzio/mezzio-router",
+                "laminas/laminas-httphandlerrunner",
+                "mezzio/mezzio-fastroute"
+            ]
+        }
+    },
+    "require": {
+        "php": "~8.1.19",
+        "composer/package-versions-deprecated": "^1.10.99",
+        "laminas/laminas-component-installer": "^2.6",
+        "laminas/laminas-config-aggregator": "^1.6",
+        "laminas/laminas-diactoros": "^2.7",
+        "laminas/laminas-stdlib": "^3.6",
+        "mezzio/mezzio": "^3.7",
+        "mezzio/mezzio-helpers": "^5.7",
+        "laminas/laminas-servicemanager": "^3.4",
+        "laminas/laminas-paginator": "^2.13",
+        "laminas/laminas-hydrator": "^4.5",
+        "mezzio/mezzio-fastroute": "^3.0.3",
+        "mezzio/mezzio-swoole": "^4.5",
+        "mezzio/mezzio-problem-details": "^1.7",
+        "mezzio/mezzio-hal": "^2.4",
+        "monolog/monolog": "^3.2",
+        "lcobucci/clock": "^2.2",
+        "cuyz/valinor": "^0.14.0",
+        "azjezz/psl": "^2.0.3",
+        "opsway/doctrine-orm-swoole": "^1.2",
+        "symfony/cache": "^6.1"
+    },
+    "require-dev": {
+        "laminas/laminas-development-mode": "^3.3.0",
+        "mezzio/mezzio-tooling": "^2.1",
+        "roave/security-advisories": "dev-master",
+        "filp/whoops": "^2.7.1",
+        "doctrine/coding-standard": "^10.0.0",
+        "doctrine/migrations": "^3.5",
+        "php-standard-library/psalm-plugin": "^2.0",
+        "phpunit/phpunit": "^9.5.21",
+        "psalm/plugin-phpunit": "^0.17.0",
+        "qossmic/deptrac-shim": "^0.24.0",
+        "roave/infection-static-analysis-plugin": "^1.21",
+        "symfony/console": "^6.1",
+        "vimeo/psalm": "^4.24.0",
+        "openswoole/ide-helper": "@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "DAL\\": "src/DAL/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DALTest\\": "test/DALTest/"
+        }
+    },
+    "scripts": {
+        "post-create-project-cmd": [
+            "@development-enable"
+        ],
+        "development-disable": "laminas-development-mode disable",
+        "development-enable": "laminas-development-mode enable",
+        "development-status": "laminas-development-mode status",
+        "mezzio": "laminas --ansi",
+        "check": [
+            "@cs-check",
+            "@test"
+        ],
+        "clear-config-cache": "php bin/clear-config-cache.php",
+        "enable-codestandard": "Dealerdirect\\Composer\\Plugin\\Installers\\PHPCodeSniffer\\Plugin::run",
+        "cs-check": "phpcs",
+        "cs-fix": "phpcbf",
+        "serve": "php -S 0.0.0.0:8080 -t public/",
+        "test": "phpunit --colors=always",
+        "test-coverage": "phpunit --colors=always --coverage-clover clover.xml"
+    }
+}

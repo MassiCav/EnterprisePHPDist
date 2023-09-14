@@ -1,0 +1,19 @@
+#!/usr/bin/env php
+<?php declare(strict_types=1);
+
+use Doctrine\ORM\Tools\Console\ConsoleRunner;
+use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
+
+chdir(__DIR__ . '/../');
+
+require 'vendor/autoload.php';
+$container = require 'config/container.php';
+
+
+$entityManager = $container->get('EMCLI');
+$commands = [];
+
+ConsoleRunner::run(
+    new SingleManagerProvider($entityManager),
+    $commands
+);

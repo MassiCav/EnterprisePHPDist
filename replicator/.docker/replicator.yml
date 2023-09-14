@@ -1,0 +1,17 @@
+replicator:
+  reader:
+    connectionString: "esdb+discover://evenstore:2113; DefaultUserCredentials=admin:changeit; HeartBeatTimeout=500; DefaultUserCredentials=admin:changeit; UseSslConnection=false;"
+    protocol: grpc
+  sink:
+    connectionString: "bootstrap.servers=kafka:9092"
+    protocol: kafka
+    partitionCount: 2
+    router: /app/config/route.js
+  scavenge: false
+  filters:
+    - type: eventType
+    include: "^EnterprisePHP$"
+  checkpoint:
+    type: file
+    path: "/data/checkpoint"
+    checkpointAfter: 100
